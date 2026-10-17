@@ -1,16 +1,17 @@
 {
-  "name": "배당 인컴",
-  "short_name": "배당인컴",
+  "id": "/TMT/",
+  "name": "TMT 배당인컴",
+  "short_name": "TMT",
   "description": "배당주 수익률·YOC·원금회수율 관리",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/TMT/",
+  "scope": "/TMT/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F4F3EF",
-  "theme_color": "#FF0000",
+  "background_color": "#0C1017",
+  "theme_color": "#0C1017",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/TMT/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/TMT/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/TMT/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
