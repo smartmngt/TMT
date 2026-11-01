@@ -1286,6 +1286,16 @@ table.mdist{width:calc(100% + 8px);margin:12px -4px 0;border-collapse:separate;b
 .mddc .tf .mokc.al,.mdd .mlink .mokc.al{cursor:pointer}
 .hrefresh .lvd{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;animation:lvp 1.6s ease-in-out infinite}
 @keyframes lvp{0%,100%{opacity:1}50%{opacity:.25}}
+/* v390 계좌 화면 정리 */
+.magcard .acols .evhl{display:inline-block;padding:1px 6px;border-radius:5px;font-weight:800;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
+.magcard .acols .evhl.up{color:var(--green);background:var(--green-t)}
+.magcard .acols .evhl.dn{color:var(--red);background:var(--red-t)}
+.dca-mini{display:flex;gap:8px;margin-top:10px}
+.dca-mini .mi{flex:1;min-width:0;display:flex;align-items:center;gap:5px;border:none;background:var(--bg);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--ink2);cursor:pointer;text-align:left}
+.dca-mini .mi em{font-style:normal;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dca-mini .mi span{flex:none;font-size:12px}
+.dca-mini .mi b{flex:none;font-weight:800;color:var(--muted)}
+.dca-mini .mi:active{opacity:.65}
 </style>
 </head>
 <body>
@@ -2492,7 +2502,7 @@ function acctCardMagHTML(){
       <div class="av num">${fmtKRW(Math.round(ap.assetNow))}</div>
       <div class="acols">
         <div class="ac"><div class="an num">📈 평가 ${fmtKRW(Math.round(ap.evalK))}</div>
-          <div class="ad num" style="color:${ap.evalPnl>=0?'var(--green)':'var(--red)'}">${fmtKD(ap.evalPnl)}${ap.evalPnlPct!=null?` ${pctA(ap.evalPnlPct)}`:''}</div>
+          <div class="ad num"><span class="evhl ${ap.evalPnl>=0?'up':'dn'}">${fmtKD(ap.evalPnl)}${ap.evalPnlPct!=null?` ${pctA(ap.evalPnlPct)}`:''}</span></div>
           <div class="ad num">보유 매수원가 ${fmtKRW(Math.round(ap.evalCostK))}</div></div>
         <div class="ac"><div class="an num">💵 예수금 ${fmtKRW(Math.round(ap.cashKRW))}</div>
           <div class="ad num">원화 ${fmtKRW(Math.round(ap.cashKrwOnly))} · 외화 ${fmtCur(ap.cashFxNative,'USD')}</div></div>
@@ -2863,12 +2873,13 @@ function dcaCardHTML(){
       <div><div class="k">이번 달 적립 매수${M.useT?' · 목표 비중 종목':''}</div><div class="v num">${W(M.sum)}</div>
         <div class="k">목표 ${W(tgt)} · ${remain>0?`<b style="color:var(--red)">${W(remain)} 남음</b>`:`<b style="color:var(--green)">달성 🎉</b>`}</div></div>
     </div>
-    ${mddDcaLine(a)}
-    ${M.rows.length?`<div class="dca-rows">${M.rows.map(r=>`<div class="r"><span class="d">${+r.date.slice(5,7)}/${+r.date.slice(8)}</span><span class="n">${esc(dispTk(r.s))} · ${fmtNumS(r.shares)}주</span><span class="m num">${W(r.k)}</span></div>`).join('')}</div>`:`<div class="dca-empty">${M.useT?'이번 달 목표 비중 종목 매수가 아직 없어요':'이번 달 매수 기록이 아직 없어요'}</div>`}
-    ${M.useT&&M.outSum>0?`<div class="dca-out">목표 비중 밖 매수 ${W(M.outSum)} · ${M.outN}종목은 적립에서 뺐어요</div>`:''}
     ${sug.length?`<div class="dca-sug"><div class="h">남은 ${W(remain)} 추천 매수</div>${sug.map(o=>`<div class="r"><span>${esc(dispTk(o.s))} · ${o.q}주</span><span class="num">${W(o.k)}</span></div>`).join('')}<div class="f">사고 나면 목표 비중과의 차이가 가장 줄어드는 조합 · 현재가 기준</div></div>`:''}
-    ${wl.length?`<div class="dca-link" id="dcaTgt"><span>🎯</span><div><div class="h">목표 비중과 연동</div><div class="w">${wl.map(s=>`<span>${esc(dispTk(s))} ${Math.round(+t[s.id]/wsum*100)}%</span>`).join('')}</div></div><b>수정 ›</b></div>`
-               :`<div class="dca-link" id="dcaTgt"><span>🎯</span><div><div class="h">목표 비중이 없어요</div><div class="f">목표 비중을 정하면 그 종목만 적립으로 세고, 추천 매수가 나와요 · 지금은 이 계좌의 모든 매수를 세요</div></div><b>정하기 ›</b></div>`}
+    ${M.rows.length?`<div class="dca-rows">${M.rows.map(r=>`<div class="r"><span class="d">${+r.date.slice(5,7)}/${+r.date.slice(8)}</span><span class="n">${esc(dispTk(r.s))} · ${fmtNumS(r.shares)}주</span><span class="m num">${W(r.k)}</span></div>`).join('')}</div>`:(sug.length?'':`<div class="dca-empty">${M.useT?'이번 달 목표 비중 종목 매수가 아직 없어요':'이번 달 매수 기록이 아직 없어요'}</div>`)}
+    ${M.useT&&M.outSum>0?`<div class="dca-out">목표 비중 밖 매수 ${W(M.outSum)} · ${M.outN}종목은 적립에서 뺐어요</div>`:''}
+    <div class="dca-mini">
+      <button class="mi" id="dcaTgt"><span>🎯</span><em>${wl.length?`목표 비중 ${wl.length}종목 연동`:'목표 비중 없음 · 모든 매수를 세요'}</em><b>${wl.length?'수정':'정하기'} ›</b></button>
+      ${mddOnAcct(a.id)?(()=>{ const mm=mddMonth(a.id, ym); return `<button class="mi" id="dcaMdd"><span>🔻</span><em>추가매수 ${W(mm.sum)}${mm.n?` · ${mm.n}회`:''}</em><b>›</b></button>`; })():''}
+    </div>
     ${prev.length?`<div class="dca-prev">${prev.map(x=>`${+x.m.slice(5)}월 <b style="color:${x.p>=100?'var(--green)':'var(--red)'}">${Math.round(x.p)}%</b>`).join(' · ')}</div>`:''}
     <button class="dca-all" id="dcaHist">적립 기록 전체 보기 ›</button>
   </div>`;
@@ -3506,7 +3517,7 @@ function openMddRegister(aid, first){
    수파베이스 서버(tmt 함수)가 장 열린 시간에 1분마다 등록 종목 시세를 보고, 기준에 닿으면 텔레그램·푸시로 보낸다.
    앱은 판단에 필요한 최소한(등록 종목·기준·금액, 월 적립 목표와 이번 달 합계)만 서버로 올린다.
    보유 수량·평단·거래 기록·통장은 올리지 않는다. 서버 쪽 쓰기는 '연결 코드'로 잠근다(처음 연결한 앱만). */
-var APP_VER='v1101.387';
+var APP_VER='v1101.390';
 var AL_KINDS={hit:true,near:true,rec:true,dca:true,week:false};
 function alCfg(){ const c=(db&&db.alert&&db.alert.cfg)||{}; const D={hit:true,near:true,rec:true,dca:true,week:false}, k=Object.assign({},D);
   Object.keys(D).forEach(x=>{ if(c.kinds&&typeof c.kinds[x]==='boolean') k[x]=c.kinds[x]; });
@@ -3680,7 +3691,7 @@ function alTgBox(){
       <div class="ast ${s1?'on':''}">${ck(s1)}<div class="tx"><b>봇 만들기</b><small>텔레그램 @BotFather에서 /newbot · MDD 레이더 봇이 있으면 그대로 써도 돼요</small>${s1?'':`<div class="arow"><a class="abtn" href="https://t.me/BotFather" target="_blank" rel="noopener">BotFather 열기</a></div>`}</div></div>
       <div class="ast ${s2?'on':''}">${ck(s2)}<div class="tx"><b>토큰 붙여넣기 → 확인</b>${s2?`<small>@${esc(bot.username)} 확인됨 · 토큰은 서버에만 암호화해 저장, 폰에 안 남아요${T.env?'':' · <u id="alTgRe">바꾸기</u>'}</small>`:`<small>${T.bad?'<span class="w">저장된 토큰을 읽지 못했어요 · 다시 넣어 주세요</span>':'BotFather가 준 숫자:영문 형태의 토큰 전체'}</small>${tokIn}`}</div></div>
       <div class="ast ${s3?'on':''}">${ck(s3)}<div class="tx"><b>봇에게 아무 말이나 보내기 → 채팅 찾기</b>${s4?`<small>내 채팅 찾음 · ${esc(chat.name)}</small>`:found?`<small>내 채팅 찾음 · ${esc(found.name)}</small>`:(s2?`<small>봇 대화방을 열어 아무 말이나 보낸 뒤 [채팅 찾기]</small><div class="arow"><a class="abtn" href="https://t.me/${encodeURIComponent(bot.username)}" target="_blank" rel="noopener">봇 열기</a><button class="abtn pri" id="alFind">채팅 찾기</button></div>${AL.chatIn?`<div class="arow"><input class="ain" id="alChat" inputmode="numeric" placeholder="채팅 ID (숫자)"><button class="abtn" id="alChatOk">넣기</button></div>`:`<small><u id="alChatMan">채팅 ID를 직접 넣기</u></small>`}`:'<small>토큰을 확인한 다음에 해요</small>')}</div></div>
-      <div class="ast ${s4?'on':''}">${ck(s4)}<div class="tx"><b>연결 → 확인 메시지 받기</b>${s4?`<small>${alWhen(chat.at)} 연결 완료 · TMT 알림엔 앞에 [TMT]가 붙어요 · <u id="alTgOff">연결 끊기</u></small>`:found?`<small>${esc(found.name)} 채팅으로 확인 메시지를 보내요</small><div class="arow"><button class="abtn pri" id="alLink">연결</button></div>`:'<small>채팅을 찾으면 연결할 수 있어요</small>'}</div></div>
+      <div class="ast ${s4?'on':''}">${ck(s4)}<div class="tx"><b>연결 → 확인 메시지 받기</b>${s4?`<small>${alWhen(chat.at)} 연결 완료 · 알림은 [BUY]·[WATCH] 같은 머리말로 와요 · <u id="alTgOff">연결 끊기</u></small>`:found?`<small>${esc(found.name)} 채팅으로 확인 메시지를 보내요</small><div class="arow"><button class="abtn pri" id="alLink">연결</button></div>`:'<small>채팅을 찾으면 연결할 수 있어요</small>'}</div></div>
     </div></div></div>`; }
 function alPushBox(){
   const i=AL.info||{}, list=(i.push||[]), me=alPid(), d=alDev(), mine=list.find(p=>p.id===me);
@@ -3969,7 +3980,7 @@ function viewStocks(){
         <div class="seed"><button class="btn" id="dAdd">종목 추가</button></div></div>`
     + flowCardHTML() + '<div style="height:78px"></div>';
   const sorted=sortStocks(list);
-  return acctChipsHTML()+acctCardMagHTML()+dcaCardHTML()+mddCardHTML()+treemapHTML()+holdingsRichHTML(sorted)+perfCardHTML()+targetCardHTML()+flowCardHTML()+'<div style="height:78px"></div>';
+  return acctChipsHTML()+acctCardMagHTML()+dcaCardHTML()+treemapHTML()+holdingsRichHTML(sorted)+perfCardHTML()+mddCardHTML()+targetCardHTML()+flowCardHTML()+'<div style="height:78px"></div>';
 }
 
 /* ---------- CALENDAR ---------- */
