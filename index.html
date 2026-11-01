@@ -3506,7 +3506,7 @@ function openMddRegister(aid, first){
    수파베이스 서버(tmt 함수)가 장 열린 시간에 1분마다 등록 종목 시세를 보고, 기준에 닿으면 텔레그램·푸시로 보낸다.
    앱은 판단에 필요한 최소한(등록 종목·기준·금액, 월 적립 목표와 이번 달 합계)만 서버로 올린다.
    보유 수량·평단·거래 기록·통장은 올리지 않는다. 서버 쪽 쓰기는 '연결 코드'로 잠근다(처음 연결한 앱만). */
-var APP_VER='v1101.386';
+var APP_VER='v1101.387';
 var AL_KINDS={hit:true,near:true,rec:true,dca:true,week:false};
 function alCfg(){ const c=(db&&db.alert&&db.alert.cfg)||{}; const D={hit:true,near:true,rec:true,dca:true,week:false}, k=Object.assign({},D);
   Object.keys(D).forEach(x=>{ if(c.kinds&&typeof c.kinds[x]==='boolean') k[x]=c.kinds[x]; });
@@ -3656,7 +3656,7 @@ function alSrvBox(noLink){
   const i=AL.info, st=AL.st;
   let dot='mid', t='알림 서버 확인 중…', s='', kis='';
   if(st==='net'){ dot='bad'; t='알림 서버에 닿지 못했어요'; s='잠시 후 다시 열어 주세요'; }
-  else if(st==='old'){ dot='bad'; t='알림 서버 코드 업데이트가 필요해요'; s='PC에서 수파베이스 tmt 함수 코드를 v1101.386으로 바꿔 붙여넣어 주세요'; }
+  else if(st==='old'){ dot='bad'; t='알림 서버 코드 업데이트가 필요해요'; s='PC에서 수파베이스 tmt 함수 코드를 최신 버전('+APP_VER+')으로 바꿔 붙여넣어 주세요'; }
   else if(st==='nodb'){ dot='bad'; t='수파베이스 SQL 설정이 필요해요'; s='SQL Editor에 tmt-setup.sql을 붙여넣고 Run 해 주세요'+(AL.err?`<br><span class="w">${esc(String(AL.err).slice(0,120))}</span>`:''); }
   else if(st==='other'){ dot='bad'; t='다른 기기에서 연결한 알림 서버예요'; s='처음 연결한 기기의 알림 설정 맨 아래 [코드 복사]로 받은 연결 코드를 붙여 넣어 주세요'; }
   else if(st==='new'){ dot='mid'; t='알림 서버 준비됨'; s='텔레그램이나 푸시를 연결하면 시작해요'; }
@@ -3703,7 +3703,8 @@ function alKindsBox(){ const c=alCfg(), K=c.kinds;
     ${row('rec','✅ 고점 회복 (추가매수했던 종목)')}
     ${row('dca','📅 월 적립 점검 (미달·달성)')}
     ${row('week','📊 주간 요약 (토요일 아침)')}
-    <div class="md">같은 기준은 한 하락에서 한 번만 보내요 · 텔레그램과 푸시로 같이 와요 · 월 적립 점검은 계좌 설정의 점검일·알림 시간에 보내요</div></div></div>`; }
+    <div class="md">같은 기준은 한 하락에서 한 번만 보내요 · 텔레그램과 푸시로 같이 와요 · 월 적립 점검은 계좌 설정의 점검일·알림 시간에 보내요</div>
+    <div class="arow" style="margin-top:12px"><button class="abtn" id="alSample" style="flex:1">🧪 유형별 샘플을 텔레그램으로 보내기</button></div></div></div>`; }
 function alSendBox(){ return `<div class="asend"><div class="y"><b>보내요</b>등록 종목 이름·코드<br>1·2·3차 기준과 금액<br>월 적립 목표·이번 달 합계<br>알림 연결 정보(암호화)</div><div class="n"><b>안 보내요</b>보유 수량·평단·평가금액<br>매수·매도·배당 기록<br>통장·예수금<br>계좌번호</div></div>
     <div class="mnote">알림 서버는 지금 시세 서버(수파베이스)와 같은 곳이에요. 판단에 필요한 최소한만 올려요.</div>`; }
 function alCodeBox(){ if(AL.st!=='ok'||!alKey()) return '';
@@ -3759,6 +3760,10 @@ function alWire(){
     alDo(async()=>{ const r=await alApi('push/set',{id, enabled:!p.enabled}); if(r.error) return toast(alErrMsg(r.error)); toast(!p.enabled?'켰어요':'껐어요'); }); });
   const tt=q('#alTestTg'); if(tt) tt.onclick=()=>alDo(()=>alTest('tg'), '보내는 중…');
   const tp=q('#alTestPush'); if(tp) tp.onclick=()=>alDo(()=>alTest('push'), '보내는 중…');
+  const smp=q('#alSample'); if(smp) smp.onclick=()=>alDo(async()=>{ if(!(await alEnsure(true))) return toast(alErrMsg(AL.err||AL.st));
+    const r=await alApi('sample',{},40000);
+    if(r.error) return toast(r.status===404?'서버 코드를 최신 버전('+APP_VER+')으로 바꿔야 샘플을 보낼 수 있어요':alErrMsg(r.error));
+    toast('텔레그램으로 샘플 '+(r.sent||0)+'개를 보냈어요'); }, '샘플 보내는 중…');
   scrim.querySelectorAll('[data-alev]').forEach(b=>b.onclick=()=>alSetCfg(c=>c.every=+b.dataset.alev));
   scrim.querySelectorAll('[data-alnt]').forEach(b=>b.onclick=()=>alSetCfg(c=>c.night=b.dataset.alnt));
   scrim.querySelectorAll('[data-alk]').forEach(r=>r.onclick=()=>alSetCfg(c=>{ const K=Object.assign({},alCfg().kinds); K[r.dataset.alk]=!K[r.dataset.alk]; c.kinds=K; }));
