@@ -346,7 +346,7 @@ function txListHTML(){
     const a=+t.amount||0, isIn=a>=0;
     return `<div class="sg-tx">
       <div class="l"><div class="d">${t.date||''}</div><div class="m">${esc(t.kind||'기타')}${t.memo?' · '+esc(t.memo):''}</div></div>
-      <div class="r"><div class="amt num" style="color:${isIn?'var(--green)':'var(--red)'}">${isIn?'+':'−'}${fmtKRW(Math.abs(a))}</div>
+      <div class="r"><div class="amt num" style="color:${isIn?'var(--up)':'var(--down)'}">${isIn?'+':'△'}${fmtKRW(Math.abs(a))}</div>
         <div class="bal num">잔액 ${fmtKRW(runMap[t.id]||0)}</div></div>
       <button class="sg-txedit" data-sgedittx="${t.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
     </div>`;

@@ -407,7 +407,7 @@ function viewTax(){
   const prevYear = yIdx>0 ? years[yIdx-1] : null;
   const prevR = prevYear!=null ? compute(hh,prevYear) : null;
   const d = prevR ? r.total-prevR.total : 0;
-  const upc=v=>v>=0?'var(--red)':'var(--green)';
+  const upc=v=>v>=0?'var(--up)':'var(--down)';   // 손익 색 통일: +빨강 · △파랑
 
   const rec=hh.records[taxYear]||{}, paid=(rec.jaesan||0)+(rec.jongbu||0);
   const diff=r.total-paid, pc=paid>0?Math.abs(diff/paid*100):0;
@@ -426,7 +426,7 @@ function viewTax(){
           <div style="white-space:nowrap"><input class="mini-in num" type="number" placeholder="0"
             value="${(rec.jongbu||0)/만||''}" data-esrec="${taxYear}|jongbu" style="width:78px"> 만</div></div>
       </div>
-      <div class="es-hint2">계산 ${만원(r.total)} vs 실납부 ${paid?만원(paid):'—'}${paid?` → 차이 ${diff>=0?'+':'−'}${만원(Math.abs(diff))}`:''}<br>
+      <div class="es-hint2">계산 ${만원(r.total)} vs 실납부 ${paid?만원(paid):'—'}${paid?` → 차이 ${diff>=0?'+':'△'}${만원(Math.abs(diff))}`:''}<br>
         오차 원인: 재산세 세부담상한(105~130%)·감면, 공시가 입력값, 분납. <b>5% 이내면 엔진 정상</b>입니다.</div>`;
   } else {
     verify=`<div class="es-hint2">${taxYear}년은 개편안을 적용한 <b>예측</b>이라 검증 대상이 아닙니다.</div>`;
@@ -453,8 +453,8 @@ function viewTax(){
         <span class="sk">연간 합계</span>
         <span class="num" style="font-size:24px;font-weight:800;color:#fff">${만원(r.total)}</span>
       </div>
-      ${prevR?`<div style="margin-top:8px;text-align:right;font-size:12.5px;font-weight:700;color:${d>=0?'#FF8B8B':'#3FE0A0'}">
-        ${prevYear}년 대비 ${d>=0?'+':'−'}${만원(Math.abs(d))} (${prevR.total?((d/prevR.total)*100).toFixed(0):0}%)</div>`:''}
+      ${prevR?`<div style="margin-top:8px;text-align:right;font-size:12.5px;font-weight:700;color:${d>=0?'#FF8B8B':'#7FB0FF'}">
+        ${prevYear}년 대비 ${d>=0?'+':'△'}${만원(Math.abs(d))} (${d<0?'△':''}${prevR.total?Math.abs((d/prevR.total)*100).toFixed(0):0}%)</div>`:''}
     </div>
     <div class="sec">구성원별 내역</div>
     <div class="setcard" style="padding:6px 16px 12px">
@@ -579,7 +579,7 @@ function viewSim(){
           <div class="l">${whatOn?(after.is1?'1세대1주택':'특례 소멸'):'스위치를 켜세요'}</div></div>
       </div>
       ${whatOn?`<div style="text-align:center;margin-top:12px;font-weight:800;font-size:14px;color:var(--red)">
-        연간 ${dd>=0?'+':'−'}${만원(Math.abs(dd))} (${before.total?((dd/before.total)*100).toFixed(0):'∞'}% ${dd>=0?'증가':'감소'})</div>`:''}
+        연간 ${dd>=0?'+':'△'}${만원(Math.abs(dd))} (${before.total?Math.abs((dd/before.total)*100).toFixed(0):'∞'}% ${dd>=0?'증가':'감소'})</div>`:''}
       <div class="es-hint2">2주택이 되면 ① 1세대1주택 특례(공제 14억·세액공제) 소멸 ② 재산세 특례 상실(공정시장가액비율 45%→60%)
         ③ 종부세 인별 합산과세. 개편 최종(2028~) 기준.</div>
     </div>`;
@@ -598,7 +598,7 @@ function viewSim(){
       <table class="es-tb" style="margin-top:6px"><thead><tr><th>연도</th><th>현행유지</th><th>개편적용</th><th>차이</th></tr></thead><tbody>
       ${data.map(d=>{const df=d.re-d.cur;
         return `<tr><td>${d.y}</td><td class="num">${만원(d.cur)}</td><td class="num">${만원(d.re)}</td>
-          <td class="num" style="color:${df>=0?'var(--red)':'var(--green)'}">${df>=0?'+':'−'}${만원(Math.abs(df))}</td></tr>`;}).join('')}
+          <td class="num" style="color:${df>=0?'var(--up)':'var(--down)'}">${df>=0?'+':'△'}${만원(Math.abs(df))}</td></tr>`;}).join('')}
       </tbody></table>
     </div>
     <div class="sec">주택 추가 취득 시나리오</div>${wHtml}`;
