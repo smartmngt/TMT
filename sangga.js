@@ -710,10 +710,17 @@ function hookBackup(){
       const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
       inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const r=new FileReader();
         r.onerror=()=>{ alert('파일을 읽지 못했어요: '+((r.error&&r.error.message)||'알 수 없음')+'\n파일: '+f.name+' ('+Math.round(f.size/1024).toLocaleString()+'KB)'); };
-        r.onload=async()=>{ let step='읽기'; try{ step='JSON 해석'; const txt=String(r.result||'').replace(/^\uFEFF/,'').trim(); const d=JSON.parse(txt); step='백업 형식 확인'; if(!d.accounts&&!d.stocks&&!d.sangga) throw new Error('TMT 백업 파일이 아니에요'); step='저장';
+        r.onload=async()=>{ let step='읽기'; try{ step='JSON 해석'; const txt=String(r.result||'').replace(/^\uFEFF/,'').trim(); const d=JSON.parse(txt); step='백업 형식 확인'; if(!d.accounts&&!d.stocks&&!d.sangga) throw new Error('TMT 백업 파일이 아니에요');
+          if(!confirm('지금 데이터를 이 백업 파일로 바꿀까요?\n\n파일: '+f.name+'\n지금 앱에 있는 기록은 모두 지워지고 되돌릴 수 없어요.')) return;
+          step='저장';
           const files=(d.sangga&&d.sangga._files)||null; if(d.sangga) delete d.sangga._files;
-          db=Object.assign({accounts:[],stocks:[],buys:[],sells:[],divs:[],taxUS:15,taxKR:15.4,theme:'light',apiBase:'',seeded:false,lastAutoBackup:0,autoBackupOn:true},d);
-          if(!db.sells)db.sells=[]; if(!db.accounts.length)db.accounts.push({id:uid(),name:'토스증권 (배당)',broker:'토스증권',color:AC[0]});
+          if(typeof load==='function'){                       // index.html 부팅 때와 같은 정리(옛 형식 변환·기본 칸 채우기·중복 종목 합치기)
+            db=load(d); if(typeof mergeDupStocksAll==='function') mergeDupStocksAll();
+            if(filterAcct!=='all' && !db.accounts.some(a=>a.id===filterAcct)) filterAcct='all';
+          } else {
+            db=Object.assign({accounts:[],stocks:[],buys:[],sells:[],divs:[],taxUS:15,taxKR:15.4,theme:'light',apiBase:'',seeded:false,lastAutoBackup:0,autoBackupOn:true},d);
+            if(!db.sells)db.sells=[]; if(!db.accounts.length)db.accounts.push({id:uid(),name:'토스증권 (배당)',broker:'토스증권',color:AC[0]});
+          }
           save();
           if(files){ for(const it of files){ try{ const blob=await dataURLToBlob(it.data); await idbPut(it.fileKey, blob); }catch(e){} } }
           step='화면 표시'; if(typeof applyTheme==='function') applyTheme(); window.render(); toast('불러오기 완료 (첨부 포함)');

@@ -2754,7 +2754,7 @@ function acctCardMagHTML(){
         </div>
         <div class="yr prev tapc" data-pdyear="-1">
           <div class="yk">작년 연간 (${ap.yThis-1}) ›</div>
-          <div class="yv num">${fmtK(ap.ytdPrev>0?yearNetGross(ap.yThis-1).net:0)}</div>
+          <div class="yv num">${fmtK(yearNetGross(ap.yThis-1).net)}</div>
           <div class="chgline"><span class="cl2">작년 동기 ${fmtK(ap.ytdPrev)}</span></div>
         </div>
       </div>
@@ -7067,9 +7067,12 @@ function openAccount(id, focus){
     const dca={ on:dOn, target:dT||old.target||0, start, days, time, excludeReinv:$('#d-ex').checked, showSug:$('#d-sug').checked, tgtHist };
     if(a){ Object.assign(a,{name,broker,color,trunc,acctNo,dca}); } else { db.accounts.push({id:uid(),name,broker,color,trunc,acctNo,dca}); } save(); _sheetReturn=null; close(); render(); toast(a?'저장됨':'계좌 추가됨'); };
   if(a&&db.accounts.length>1)$('#a-del').onclick=()=>{ const n=db.stocks.filter(s=>s.accountId===a.id).length;
-    if(!confirm(`'${a.name}' 계좌를 삭제할까요?${n?`\n종목 ${n}개도 함께 삭제됩니다.`:''}`)) return;
+    const nf=db.flows.filter(f=>f.accountId===a.id).length;
+    if(!confirm(`'${a.name}' 계좌를 삭제할까요?${n?`\n종목 ${n}개도 함께 삭제됩니다.`:''}${nf?`\n통장 입출금 기록 ${nf}건도 함께 삭제됩니다.`:''}`)) return;
     const sids=db.stocks.filter(s=>s.accountId===a.id).map(s=>s.id);
     db.stocks=db.stocks.filter(s=>s.accountId!==a.id); db.buys=db.buys.filter(b=>!sids.includes(b.stockId)); db.sells=db.sells.filter(b=>!sids.includes(b.stockId)); db.divs=db.divs.filter(d=>!sids.includes(d.stockId));
+    // 입출금이 남으면 '전체 계좌'의 예수금·총입금에 지운 계좌 돈이 계속 섞인다
+    db.flows=db.flows.filter(f=>f.accountId!==a.id); db.splits=(db.splits||[]).filter(x=>!sids.includes(x.stockId)); if(db.targets) delete db.targets[a.id];
     db.accounts=db.accounts.filter(x=>x.id!==a.id); if(filterAcct===a.id)filterAcct='all'; save(); _sheetReturn=null; close(); render(); toast('삭제됨'); };
 }
 
@@ -7077,10 +7080,16 @@ function openAccount(id, focus){
 function exportData(){ const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='tmt-asset-backup-'+todayISO()+'.json'; a.click(); db.lastAutoBackup=Date.now(); save(); toast('백업 저장됨'); }
 function importData(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
   inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const r=new FileReader();
-    r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.accounts&&!d.stocks) throw 0; db=Object.assign({accounts:[],stocks:[],buys:[],sells:[],divs:[],taxUS:15,taxKR:15.4,theme:'light',apiBase:'',seeded:false,lastAutoBackup:0,autoBackupOn:true},d); if(!db.sells)db.sells=[]; if(!db.accounts.length)db.accounts.push({id:uid(),name:'토스증권 (배당)',broker:'토스증권',color:ACCT_COLORS[0]}); save(); applyTheme(); render(); toast('불러오기 완료'); }catch(e){ toast('파일 형식 오류'); } };
+    r.onload=()=>{ let d; try{ d=JSON.parse(r.result); if(!d.accounts&&!d.stocks) throw 0; }catch(e){ return toast('파일 형식 오류'); }
+      if(!confirm(`지금 데이터를 이 백업 파일로 바꿀까요?\n\n파일: ${f.name}\n지금 앱에 있는 기록은 모두 지워지고 되돌릴 수 없어요.`)) return;
+      db=load(d); mergeDupStocksAll();                       // 부팅 때와 같은 정리(옛 형식 변환·중복 종목 합치기)
+      if(filterAcct!=='all' && !acctById(filterAcct)) filterAcct='all';
+      save(); applyTheme(); render(); toast('불러오기 완료'); };
     r.readAsText(f); };
   inp.click(); }
-function resetAll(){ if(confirm('정말 모든 데이터를 삭제할까요? 되돌릴 수 없어요.')){ db={accounts:[{id:uid(),name:'토스증권 (배당)',broker:'토스증권',color:ACCT_COLORS[0]}],stocks:[],buys:[],sells:[],divs:[],taxUS:db.taxUS,taxKR:db.taxKR,theme:db.theme,apiBase:db.apiBase,seeded:false,lastAutoBackup:db.lastAutoBackup||0,autoBackupOn:db.autoBackupOn!==false}; filterAcct='all'; priceCache={}; save(); render(); toast('초기화됨'); } }
+// load()로 빈 데이터를 만들어야 flows·splits·targets 같은 기본 칸이 다 생긴다 (빠지면 화면 그릴 때 오류)
+// 알림 서버 연결(db.alert)은 설정이라 남긴다 — 지우면 서버가 예전 코드로 묶여 있어 다시 연결이 안 된다
+function resetAll(){ if(confirm('정말 모든 데이터를 삭제할까요? 되돌릴 수 없어요.')){ db=load({accounts:[{id:uid(),name:'토스증권 (배당)',broker:'토스증권',color:ACCT_COLORS[0]}],taxUS:db.taxUS,taxKR:db.taxKR,theme:db.theme,apiBase:db.apiBase,lastAutoBackup:db.lastAutoBackup||0,autoBackupOn:db.autoBackupOn!==false,alert:db.alert}); filterAcct='all'; priceCache={}; save(); render(); toast('초기화됨'); } }
 
 /* ---------- backup (phone file) ---------- */
 function backupFilename(tag){ const d=new Date(); const p=n=>String(n).padStart(2,'0'); return `tmt-backup-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${tag?'-'+tag:''}.json`; }
